@@ -24,6 +24,16 @@ func home(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Wazzup"))
 }
 
+func showSnippets(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		http.Error(w, "Method Not Allowed", 405)
+		return
+	}
+
+	w.Write([]byte("Display"))
+}
+
 func showSnippet(w http.ResponseWriter, r *http.Request) {
 	// Extract the value of the id parameter from the query string and try to
 	// convert it to an integer using the strconv.Atoi() function.
@@ -99,6 +109,7 @@ func main() {
 
 	// fixed paths
 	mux.HandleFunc("/snippet", showSnippet)
+	mux.HandleFunc("/snippets", showSnippets)
 	mux.HandleFunc("/snippet/create", createSnippet)
 
 	log.Println("Starting server on :4000")
