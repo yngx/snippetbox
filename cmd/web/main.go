@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
@@ -14,6 +15,9 @@ func main() {
 
 	// This parses the command-line flag.
 	flag.Parse()
+
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	/*
 		http.handleFunc() functions allow us to register routes without declaring
@@ -54,7 +58,16 @@ func main() {
 	// "/static" prefix before the request reaches the file server.
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	log.Printf("Starting server on %s", *addr)
-	log.Fatal(http.ListenAndServe(*addr, mux))
+	infoLog.Printf("Starting server on %s", *addr)
+
+	srv := &http.Server{
+		Addr:     *addr,
+		ErrorLog: errorLog,
+		Handler:  mux,
+	}
+
+	err := srv.ListenAndServe()
+	// log.Fatal() function will also call os.Exit(1) after writing the message
+	errorLog.Fatal(err)
 
 }
