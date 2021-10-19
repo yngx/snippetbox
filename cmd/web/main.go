@@ -1,11 +1,19 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 )
 
 func main() {
+	// Define a new command-line flag with the name 'addr', a default value of ":4000"
+	// and some short help text explaining what the flag controls. The value of the
+	// flag will be stored in the addr variable at runtime.
+	addr := flag.String("addr", ":4000", "HTTP network address")
+
+	// This parses the command-line flag.
+	flag.Parse()
 
 	/*
 		http.handleFunc() functions allow us to register routes without declaring
@@ -46,7 +54,7 @@ func main() {
 	// "/static" prefix before the request reaches the file server.
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	log.Println("Starting server on :4000")
-	log.Fatal(http.ListenAndServe(":4000", mux))
+	log.Printf("Starting server on %s", *addr)
+	log.Fatal(http.ListenAndServe(*addr, mux))
 
 }
