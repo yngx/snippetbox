@@ -7,6 +7,11 @@ import (
 	"os"
 )
 
+type application struct {
+	errorLog *log.Logger
+	infoLog  *log.Logger
+}
+
 func main() {
 	// Define a new command-line flag with the name 'addr', a default value of ":4000"
 	// and some short help text explaining what the flag controls. The value of the
@@ -18,6 +23,12 @@ func main() {
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	// Initialize a new instance of application containing the dependencies.
+	app := &application{
+		errorLog: errorLog,
+		infoLog:  infoLog,
+	}
 
 	/*
 		http.handleFunc() functions allow us to register routes without declaring
@@ -33,12 +44,12 @@ func main() {
 	mux := http.NewServeMux()
 
 	// subtree path, patterns are matched
-	mux.HandleFunc("/", home)
+	mux.HandleFunc("/", app.home)
 
 	// fixed paths
-	mux.HandleFunc("/snippet", showSnippet)
-	mux.HandleFunc("/snippets", showSnippets)
-	mux.HandleFunc("/snippet/create", createSnippet)
+	mux.HandleFunc("/snippet", app.showSnippet)
+	mux.HandleFunc("/snippets", app.showSnippets)
+	mux.HandleFunc("/snippet/create", app.createSnippet)
 
 	// Create a file server which serves files out of the "./ui/static" directory.
 	// Note that the path given to the http.Dir function is relative to the project

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -12,7 +11,7 @@ import (
  The http.ResponseWriter parameter provides methods for assembling a HTTP response and sending it to the user.
  The *http.Request parameter is a pointer to a struct which holds information about the current request
 */
-func home(w http.ResponseWriter, r *http.Request) {
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	/*
 		Check if the current request URL path exactly matches "/". If it doesn't, use
 		the http.NotFound() function to send a 404 response to the client.
@@ -34,7 +33,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 	// template set. We can pass the slice of file paths as a variadic parameter.
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		log.Println(err.Error())
+		app.errorLog.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
@@ -44,12 +43,12 @@ func home(w http.ResponseWriter, r *http.Request) {
 	// dynamic data that we want to pass in, which for now we'll leave as nil.
 	err = ts.Execute(w, nil)
 	if err != nil {
-		log.Println(err.Error())
+		app.errorLog.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 	}
 }
 
-func showSnippet(w http.ResponseWriter, r *http.Request) {
+func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	// Extract the value of the id parameter from the query string and try to
 	// convert it to an integer using the strconv.Atoi() function.
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
@@ -79,7 +78,7 @@ func showSnippet(w http.ResponseWriter, r *http.Request) {
 	//w.Write([]byte("Display"))
 }
 
-func showSnippets(w http.ResponseWriter, r *http.Request) {
+func (app *application) showSnippets(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "Method Not Allowed", 405)
@@ -89,7 +88,7 @@ func showSnippets(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Display"))
 }
 
-func createSnippet(w http.ResponseWriter, r *http.Request) {
+func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 
