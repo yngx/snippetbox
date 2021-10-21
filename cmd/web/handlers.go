@@ -33,8 +33,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// template set. We can pass the slice of file paths as a variadic parameter.
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		app.errorLog.Println(err.Error())
-		http.Error(w, "Internal Server Error", 500)
+		app.serverError(w, err)
 		return
 	}
 
@@ -43,8 +42,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// dynamic data that we want to pass in, which for now we'll leave as nil.
 	err = ts.Execute(w, nil)
 	if err != nil {
-		app.errorLog.Println(err.Error())
-		http.Error(w, "Internal Server Error", 500)
+		app.serverError(w, err)
 	}
 }
 
@@ -53,7 +51,7 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	// convert it to an integer using the strconv.Atoi() function.
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
-		http.NotFound(w, r)
+		app.notFound(w)
 		return
 	}
 
@@ -81,7 +79,7 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 func (app *application) showSnippets(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
-		http.Error(w, "Method Not Allowed", 405)
+		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -100,7 +98,7 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Method Not Allowed"))
 		*/
 
-		http.Error(w, "Method Not Allowed", 405)
+		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
 
