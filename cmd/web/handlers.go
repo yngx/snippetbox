@@ -102,11 +102,25 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/*
-		By not explicitly calling w.WriteHeader(), the first call to
-		w.Write() will send a 200 OK status code to the user.
-		In this case it is fine. But if we want to sen a non-200 code
-		we must call w.WriteHeader() before the next line.
-	*/
-	w.Write([]byte("Created a snippet..."))
+	// Create some variables holding dummy data. We'll remove these later on
+	// during the build.
+	title := "O snail"
+	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
+	expires := "7"
+
+	id, err := app.snippets.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
+
+	// /*
+	// 	By not explicitly calling w.WriteHeader(), the first call to
+	// 	w.Write() will send a 200 OK status code to the user.
+	// 	In this case it is fine. But if we want to sen a non-200 code
+	// 	we must call w.WriteHeader() before the next line.
+	// */
+	// w.Write([]byte("Created a snippet..."))
 }
