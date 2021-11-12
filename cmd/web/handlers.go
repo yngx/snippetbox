@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
+
+	"github.com/yngx/snippetbox/pkg/models"
 )
 
 /*
@@ -61,19 +64,21 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	*/
 	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
 
-	/*
-		Go will automatically set the following headers for us:
-		Date, Content-Length, and Content-Type.
+	// Use the SnippetModel object's Get method to retrieve the data for a
+	// specific record based on its ID. If no matching record is found,
+	// return a 404 Not Found response.
+	s, err := app.snippets.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
 
-		The Content-Type header is set by content sniffing the response
-		body with http.DetectContentType() function.
-
-		A caveat here though is that Go can't distinguish JSON from plain
-		text. So by default, JSON responses will be sent with
-		`Content-Type: text/plain; charset=utf-8` unless we explicitlky
-		set the header.
-	*/
-	//w.Write([]byte("Display"))
+	// Write the snippet data as a plain-text HTTP response body.
+	fmt.Fprintf(w, "%v", s)
 }
 
 func (app *application) showSnippets(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +88,19 @@ func (app *application) showSnippets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("Display"))
+	snippets, err := app.snippets.GetAll()
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	for i := range snippets {
+		fmt.Fprintf(w, "%v", snippets[i])
+	}
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
