@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"text/template"
 
 	"github.com/yngx/snippetbox/pkg/models"
 )
@@ -71,7 +72,7 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		We pass our http.ResponseWriter to fmt.Fprintf because our http.ResponseWriter
 		satisfies the io.Writer interface that Fprintf requires.
 	*/
-	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
+	//fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
 
 	// Use the SnippetModel object's Get method to retrieve the data for a
 	// specific record based on its ID. If no matching record is found,
@@ -86,8 +87,28 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Write the snippet data as a plain-text HTTP response body.
-	fmt.Fprintf(w, "%v", s)
+	data := &templateData{Snippet: s}
+	// Initialize a slice containing the paths to the show.page.tmpl file,
+	// plus the base layout and footer partial that we made earlier.
+	files := []string{
+		"./ui/html/show.page.tmpl",
+		"./ui/html/base.layout.tmpl",
+		"./ui/html/footer.partial.tmpl",
+	}
+
+	// Parse the template files...
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	// And then execute them. Notice how we are passing in the snippet
+	// data (a models.Snippet struct) as the final parameter.
+	err = ts.Execute(w, data)
+	if err != nil {
+		app.serverError(w, err)
+	}
 }
 
 func (app *application) showSnippets(w http.ResponseWriter, r *http.Request) {
