@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"text/template"
 
 	"github.com/yngx/snippetbox/pkg/models"
 )
@@ -30,31 +29,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := &templateData{Snippets: s}
-
-	// We initialize a slice containing the paths to the two template files. Note that the
-	// home.page.tmpl file must be the *first* file in the slice.
-	files := []string{
-		"./ui/html/home.page.tmpl",
-		"./ui/html/base.layout.tmpl",
-		"./ui/html/footer.partial.tmpl",
-	}
-
-	// We use the template.ParseFiles() function to read the template file into a
-	// template set. We can pass the slice of file paths as a variadic parameter.
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	// We then use the Execute() method on the template set to write the template
-	// content as the response body. The last parameter to Execute() represents any
-	// dynamic data that we want to pass in, which for now we'll leave as nil.
-	err = ts.Execute(w, data)
-	if err != nil {
-		app.serverError(w, err)
-	}
+	app.render(w, r, "home.page.tmpl", &templateData{
+		Snippets: s,
+	})
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
@@ -85,28 +62,10 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := &templateData{Snippet: s}
-	// Initialize a slice containing the paths to the show.page.tmpl file,
-	// plus the base layout and footer partial that we made earlier.
-	files := []string{
-		"./ui/html/show.page.tmpl",
-		"./ui/html/base.layout.tmpl",
-		"./ui/html/footer.partial.tmpl",
-	}
-
-	// Parse the template files...
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	// And then execute them. Notice how we are passing in the snippet
-	// data (a models.Snippet struct) as the final parameter.
-	err = ts.Execute(w, data)
-	if err != nil {
-		app.serverError(w, err)
-	}
+	// Use the new render helper.
+	app.render(w, r, "show.page.tmpl", &templateData{
+		Snippet: s,
+	})
 }
 
 func (app *application) showSnippets(w http.ResponseWriter, r *http.Request) {
