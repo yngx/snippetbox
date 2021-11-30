@@ -37,7 +37,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	// Extract the value of the id parameter from the query string and try to
 	// convert it to an integer using the strconv.Atoi() function.
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	id, err := strconv.Atoi(r.URL.Query().Get(":id"))
 	if err != nil || id < 1 {
 		app.notFound(w)
 		return
@@ -88,6 +88,10 @@ func (app *application) showSnippets(w http.ResponseWriter, r *http.Request) {
 	for i := range snippets {
 		fmt.Fprintf(w, "%v", snippets[i])
 	}
+}
+
+func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Create a new snippet..."))
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
