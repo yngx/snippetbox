@@ -7,14 +7,17 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golangcollege/sessions"
 	"github.com/yngx/snippetbox/pkg/models/mysql"
 )
 
 type application struct {
 	errorLog      *log.Logger
 	infoLog       *log.Logger
+	session       *sessions.Session
 	snippets      *mysql.SnippetModel
 	templateCache map[string]*template.Template
 }
@@ -25,8 +28,7 @@ func main() {
 	// flag will be stored in the addr variable at runtime.
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	dsn := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "MySQL data source name")
-
-	// This parses the command-line flag.
+	secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -50,10 +52,17 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	// Use the sessions.New() function to initialize a new session manager,
+	// passing in the secret key as the parameter. Then we configure it so
+	// sessions always expires after 12 hours.
+	session := sessions.New([]byte(*secret))
+	session.Lifetime = 12 * time.Hour
+
 	// Initialize a new instance of application containing the dependencies.
 	app := &application{
 		errorLog:      errorLog,
 		infoLog:       infoLog,
+		session:       session,
 		snippets:      &mysql.SnippetModel{DB: db},
 		templateCache: templateCache,
 	}
@@ -68,14 +77,13 @@ func main() {
 		and expose them to our users.
 	*/
 
-	infoLog.Printf("Starting server on %s", *addr)
-
 	srv := &http.Server{
 		Addr:     *addr,
 		ErrorLog: errorLog,
 		Handler:  app.routes(),
 	}
 
+	infoLog.Printf("Starting server on %s", *addr)
 	err = srv.ListenAndServe()
 	// log.Fatal() function will also call os.Exit(1) after writing the message
 	errorLog.Fatal(err)
