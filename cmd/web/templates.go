@@ -15,6 +15,7 @@ import (
 // to it as the build progresses.
 type templateData struct {
 	CurrentYear int
+	Flash       string
 	FormData    url.Values
 	FormErrors  map[string]string
 	Snippet     *models.Snippet
