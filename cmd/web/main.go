@@ -57,6 +57,7 @@ func main() {
 	// sessions always expires after 12 hours.
 	session := sessions.New([]byte(*secret))
 	session.Lifetime = 12 * time.Hour
+	session.Secure = true // Set the Secure flag on our session cookies
 
 	// Initialize a new instance of application containing the dependencies.
 	app := &application{
@@ -84,7 +85,7 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
-	err = srv.ListenAndServe()
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	// log.Fatal() function will also call os.Exit(1) after writing the message
 	errorLog.Fatal(err)
 }
