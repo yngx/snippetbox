@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	"html/template"
@@ -68,6 +69,14 @@ func main() {
 		templateCache: templateCache,
 	}
 
+	// Initialize a tls.Config struct to hold the non-default TLS settings we want
+	// the server to use. In this case the only thing that we're changing is the
+	// curve preferences value, so that only elliptic curves with assembly
+	// implementations are used.
+	tlsConfig := &tls.Config{
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
+
 	/*
 		http.handleFunc() functions allow us to register routes without declaring
 		a servemux. These functions, behind the scene, register their routes with
@@ -79,9 +88,10 @@ func main() {
 	*/
 
 	srv := &http.Server{
-		Addr:     *addr,
-		ErrorLog: errorLog,
-		Handler:  app.routes(),
+		Addr:      *addr,
+		ErrorLog:  errorLog,
+		Handler:   app.routes(),
+		TLSConfig: tlsConfig,
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
